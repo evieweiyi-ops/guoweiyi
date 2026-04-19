@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小红书收藏夹整理助手 Demo</title>
+  <meta name="description" content="一个嵌入小红书收藏夹场景的轻量 AI 整理助手 Demo" />
+  <style>
+    :root{
+      --bg:#fafafa;
+      --card:#ffffff;
+      --text:#222;
+      --sub:#666;
+      --line:#e9e9e9;
+      --accent:#ff2442;
+      --soft:#fff3f5;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:920px;
+      margin:0 auto;
+      padding:32px 18px 48px;
+    }
+    h1{
+      margin:0 0 10px;
+      font-size:28px;
+      line-height:1.3;
+    }
+    .desc{
+      color:var(--sub);
+      line-height:1.7;
+      margin-bottom:22px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      margin-bottom:16px;
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    input{
+      flex:1;
+      min-width:220px;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      font-size:15px;
+      outline:none;
+      background:#fff;
+    }
+    input:focus{
+      border-color:#ff9aa9;
+      box-shadow:0 0 0 3px rgba(255,36,66,.08);
+    }
+    button{
+      border:none;
+      border-radius:12px;
+      padding:14px 18px;
+      font-size:15px;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+    button:hover{transform:translateY(-1px)}
+    .primary{
+      background:var(--accent);
+      color:#fff;
+    }
+    .ghost{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--line);
+      margin-right:8px;
+      margin-top:8px;
+    }
+    .section-title{
+      font-size:18px;
+      margin:0 0 12px;
+      line-height:1.5;
+    }
+    .muted{
+      color:var(--sub);
+      font-size:14px;
+      line-height:1.7;
+    }
+    .chip{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--soft);
+      color:var(--accent);
+      font-size:13px;
+      margin:0 8px 8px 0;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .mini{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      background:#fff;
+    }
+    .mini h4{
+      margin:0 0 8px;
+      font-size:15px;
+    }
+    .list{
+      margin:0;
+      padding-left:18px;
+      color:var(--sub);
+      line-height:1.8;
+      font-size:14px;
+    }
+    .result{
+      display:none;
+    }
+    .post{
+      padding:12px 0;
+      border-top:1px solid var(--line);
+    }
+    .post:first-child{border-top:none;padding-top:0}
+    .tag{
+      display:inline-block;
+      font-size:12px;
+      color:#555;
+      background:#f5f5f5;
+      border-radius:999px;
+      padding:4px 8px;
+      margin-right:6px;
+      margin-bottom:6px;
+    }
+    .small-actions button{
+      padding:10px 14px;
+      font-size:14px;
+    }
+    .footer{
+      margin-top:18px;
+      color:#888;
+      font-size:12px;
+      line-height:1.7;
+    }
+    @media (max-width:700px){
+      .grid{grid-template-columns:1fr}
+      h1{font-size:24px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>收藏夹整理助手 Demo</h1>
+    <div class="desc">
+      这个 demo 模拟一个嵌入小红书收藏夹场景的轻量 AI 助手：先理解用户整理目标，再对收藏内容做主题、场景和价值识别，最后输出可继续追问的整理结果。
+    </div>
+
+    <div class="card">
+      <div class="section-title">1. 先告诉我，你现在最想怎么整理收藏夹？</div>
+      <div class="row">
+        <input id="userInput" value="帮我整理大阪旅行相关收藏，按行程、美食、购物分类，并推荐先看哪几篇" />
+        <button class="primary" onclick="runDemo()">让 AI 帮我整理</button>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="ghost" onclick="fillInput('帮我整理大阪旅行相关收藏，按行程、美食、购物分类，并推荐先看哪几篇')">大阪旅行</button>
+        <button class="ghost" onclick="fillInput('帮我总结敏感肌防晒相关收藏，提炼高频推荐和避雷点')">敏感肌防晒</button>
+        <button class="ghost" onclick="fillInput('帮我把校招面试经验类收藏归类，并标出最值得先看的内容')">校招面试</button>
+      </div>
+    </div>
+
+    <div id="resultBox" class="result">
+      <div class="card">
+        <div class="section-title">2. AI 识别到你的整理目标</div>
+        <div id="intentText" class="muted"></div>
+        <div style="margin-top:12px;">
+          <span class="chip" id="chip1"></span>
+          <span class="chip" id="chip2"></span>
+          <span class="chip" id="chip3"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">3. 整理结果</div>
+        <div class="grid">
+          <div class="mini">
+            <h4>智能分组</h4>
+            <ul id="groupList" class="list"></ul>
+          </div>
+          <div class="mini">
+            <h4>AI 摘要</h4>
+            <ul id="summaryList" class="list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">4. 推荐先看的收藏内容</div>
+        <div id="posts"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">5. 下一步</div>
+        <div class="small-actions">
+          <button class="ghost">保存为新收藏夹</button>
+          <button class="ghost">继续追问</button>
+          <button class="ghost">筛掉重复内容</button>
+          <button class="ghost">生成清单</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      说明：这是静态 demo，用于展示“理解整理目标 → 识别内容 → 输出分组和摘要 → 推荐先看内容 → 下一步动作”的核心流程，适合直接部署到 Vercel。
+    </div>
+  </div>
+
+  <script>
+    const demoData = {
+      travel: {
+        intent: "你当前的目标不是简单回看收藏，而是为了即将到来的大阪旅行，从已有收藏里快速提取可执行信息，并完成初步决策。",
+        chips: ["旅行规划", "出发前决策", "按场景整理"],
+        groups: [
+          "行程类：3篇，主要包含三日路线、交通换乘、区域安排",
+          "美食类：4篇，主要集中在道顿堀、梅田、本地小店推荐",
+          "购物类：2篇，主要涉及药妆、百货和伴手礼购买"
+        ],
+        summary: [
+          "你的收藏更适合第一次去大阪的人，重点是降低换乘和排队成本。",
+          "高频出现的信息是：难波更适合作为住宿中心，美食和购物不要安排过满。",
+          "建议优先看行程类内容，再补充美食和购物，提高可执行性。"
+        ],
+        posts: [
+          {
+            title:"大阪 3 天 2 夜不暴走版：第一次去直接抄作业",
+            tags:["行程类","高可执行","推荐先看"],
+            desc:"包含时间线、交通和区域安排，适合先建立整体框架。"
+          },
+          {
+            title:"第一次去大阪最容易浪费时间的 7 件事",
+            tags:["避坑类","效率导向"],
+            desc:"适合快速避开常见踩坑点，减少行程损耗。"
+          },
+          {
+            title:"道顿堀不一定最值得吃，这 5 家更推荐",
+            tags:["美食类","本地视角"],
+            desc:"补充热门路线之外的选择，适合二次筛选。"
+          }
+        ]
+      },
+      skincare: {
+        intent: "你当前的目标是从分散的收藏内容里提炼出敏感肌防晒的有效决策依据，而不是单纯浏览帖子。",
+        chips: ["护肤决策", "高频问题提炼", "场景化选择"],
+        groups: [
+          "产品测评类：5篇，重点比较肤感、成膜速度、搓泥情况",
+          "成分分析类：2篇，帮助理解刺激来源和筛选逻辑",
+          "场景推荐类：3篇，分别对应通勤、户外、妆前使用"
+        ],
+        summary: [
+          "高频讨论点集中在辣眼、闷痘、搓泥和与底妆兼容度。",
+          "你的收藏里更适合先按使用场景筛选，而不是先看品牌。",
+          "建议先看实测类内容，再用成分分析做二次确认。"
+        ],
+        posts: [
+          {
+            title:"混油敏感肌实测 8 款防晒，终于找到不辣眼也不搓泥的",
+            tags:["实测类","推荐先看"],
+            desc:"信息密度高，适合先建立候选范围。"
+          },
+          {
+            title:"敏感肌防晒避雷：别只看 SPF，也要看刺激来源",
+            tags:["成分类","专业补充"],
+            desc:"适合帮助你理解为什么会不耐受。"
+          },
+          {
+            title:"早八上班族的防晒筛选逻辑：30 秒涂完、不搓泥、下午不暗沉",
+            tags:["通勤场景","高相关"],
+            desc:"适合直接服务日常决策。"
+          }
+        ]
+      },
+      interview: {
+        intent: "你当前的目标是把零散的校招面试收藏转化为可复用的准备资料，方便快速回看和输出。",
+        chips: ["求职准备", "高频回看", "输出导向"],
+        groups: [
+          "自我介绍类：3篇，适合开场准备",
+          "群面案例类：4篇，适合提升结构化表达",
+          "产品面试类：3篇，适合准备产品思考和案例分析"
+        ],
+        summary: [
+          "你的收藏更适合按面试环节而不是按公司分类。",
+          "高价值内容主要集中在结构化表达模板和真实案例拆解。",
+          "建议先看产品面试类，再回到自我介绍和群面类做补充。"
+        ],
+        posts: [
+          {
+            title:"产品经理校招高频题：如何做需求分析",
+            tags:["产品面试","推荐先看"],
+            desc:"适合建立回答框架。"
+          },
+          {
+            title:"1 分钟自我介绍怎么讲得更像产品人",
+            tags:["自我介绍","高频使用"],
+            desc:"适合快速输出和背诵。"
+          },
+          {
+            title:"群面里最容易被打断的 3 个原因",
+            tags:["群面","避坑类"],
+            desc:"适合面试前临时回顾。"
+          }
+        ]
+      }
+    };
+
+    function fillInput(text){
+      document.getElementById('userInput').value = text;
+    }
+
+    function runDemo(){
+      const text = document.getElementById('userInput').value || "";
+      let data = demoData.travel;
+      if(text.includes("敏感肌") || text.includes("防晒")) data = demoData.skincare;
+      if(text.includes("面试") || text.includes("校招")) data = demoData.interview;
+
+      document.getElementById('intentText').innerText = data.intent;
+      document.getElementById('chip1').innerText = data.chips[0];
+      document.getElementById('chip2').innerText = data.chips[1];
+      document.getElementById('chip3').innerText = data.chips[2];
+
+      const groupList = document.getElementById('groupList');
+      const summaryList = document.getElementById('summaryList');
+      const posts = document.getElementById('posts');
+
+      groupList.innerHTML = "";
+      summaryList.innerHTML = "";
+      posts.innerHTML = "";
+
+      data.groups.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        groupList.appendChild(li);
+      });
+
+      data.summary.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        summaryList.appendChild(li);
+      });
+
+      data.posts.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'post';
+        const tags = item.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+        div.innerHTML = `
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px;">${item.title}</div>
+          <div style="margin-bottom:8px;">${tags}</div>
+          <div class="muted">${item.desc}</div>
+        `;
+        posts.appendChild(div);
+      });
+
+      document.getElementById('resultBox').style.display = 'block';
+    }
+
+    runDemo();
+  </script>
+</body>
+</html>
